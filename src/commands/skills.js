@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import { execSync } from 'child_process';
-import { readdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
+import { readdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'fs';
 import { join, basename } from 'path';
 import { api } from '../api.js';
 import { getSkillsDir, getToken, getApiUrl } from '../config.js';
@@ -236,6 +236,55 @@ export function skillsCommand(program) {
       } else {
         console.error(chalk.red('Please specify one of: --editor, --describe, or --video'));
         process.exit(1);
+      }
+    });
+
+  cmd
+    .command('delete <name>')
+    .description('Delete a skill locally and optionally unpublish from Provision')
+    .action(async (name) => {
+      const skillDir = join(getSkillsDir(), name);
+
+      if (!existsSync(skillDir)) {
+        console.error(chalk.red(`Skill "${name}" not found locally.`));
+        process.exit(1);
+      }
+
+      const { confirm } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: `Delete "${name}" locally?`,
+          default: false,
+        },
+      ]);
+
+      if (!confirm) {
+        console.log(chalk.dim('Cancelled.'));
+        return;
+      }
+
+      // Delete local files
+      rmSync(skillDir, { recursive: true, force: true });
+      console.log(chalk.green(`✓ Deleted local skill "${name}"`));
+
+      // Offer to unpublish from Provision
+      const { unpublish } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'unpublish',
+          message: 'Also unpublish from Provision?',
+          default: false,
+        },
+      ]);
+
+      if (unpublish) {
+        try {
+          await api.deleteSkill(name);
+          console.log(chalk.green(`✓ Unpublished "${name}" from Provision`));
+        } catch (err) {
+          console.error(chalk.red(`Failed to unpublish: ${err.message}`));
+        }
       }
     });
 }

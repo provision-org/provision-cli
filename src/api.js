@@ -90,6 +90,10 @@ class ProvisionAPI {
     return this.request('POST', '/skills/edit', { skill_content: skillContent, modification });
   }
 
+  async deleteSkill(slug) {
+    return this.request('DELETE', `/skills/${slug}`);
+  }
+
   // Agents
   async listAgents() {
     return this.request('GET', '/agents');
