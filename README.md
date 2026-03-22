@@ -8,15 +8,28 @@ Teach AI agents new skills from natural language or video. Create, edit, publish
 ## Quick Start
 
 ```bash
-npm install -g @provision-ai/cli
+# No install needed
+npx @provision-ai/cli login
+npx @provision-ai/cli teach -d "Search LinkedIn for leads and extract their contact info"
+npx @provision-ai/cli publish linkedin-leads
+npx @provision-ai/cli install linkedin-leads
 
-provision login
+# Or install globally
+npm install -g @provision-ai/cli
 provision teach -d "Search LinkedIn for leads and extract their contact info"
-provision publish linkedin-leads
-provision install linkedin-leads
 ```
 
 ## Installation
+
+### Option 1: Use directly with npx (recommended)
+
+No installation required — just prefix commands with `npx @provision-ai/cli`:
+
+```bash
+npx @provision-ai/cli teach -d "Monitor Hacker News for AI mentions"
+```
+
+### Option 2: Install globally
 
 ```bash
 npm install -g @provision-ai/cli
@@ -57,6 +70,8 @@ provision logout
 ```
 
 ## Commands
+
+> All commands below use `provision` (globally installed). You can also use `npx @provision-ai/cli` instead.
 
 ### `provision teach`
 
