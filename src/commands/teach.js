@@ -228,33 +228,30 @@ export function teachCommand(program) {
 
       const home = process.env.HOME;
       const skillContent = skillFiles.skill_content;
+      const readmeContent = skillFiles.readme || `# ${skillName}\n\n${genDescription}`;
 
-      if (targets.includes('openclaw')) {
-        const dir = join(home, '.openclaw', 'skills', skillName);
+      function installToDir(baseDir, label) {
+        const dir = join(baseDir, skillName);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, 'SKILL.md'), skillContent);
-        console.log(chalk.green(`✓ Installed to OpenClaw (${dir})`));
+        writeFileSync(join(dir, 'README.md'), readmeContent);
+        console.log(chalk.green(`✓ Installed to ${label} (${dir}/)`));
+      }
+
+      if (targets.includes('openclaw')) {
+        installToDir(join(home, '.openclaw', 'skills'), 'OpenClaw');
       }
 
       if (targets.includes('claude-code')) {
-        const dir = join(home, '.claude', 'skills');
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${skillName}.md`), skillContent);
-        console.log(chalk.green(`✓ Installed to Claude Code (~/.claude/skills/${skillName}.md)`));
+        installToDir(join(home, '.claude', 'skills'), 'Claude Code');
       }
 
       if (targets.includes('cursor')) {
-        const dir = join(process.cwd(), '.cursor', 'skills');
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${skillName}.md`), skillContent);
-        console.log(chalk.green(`✓ Installed to Cursor (.cursor/skills/${skillName}.md)`));
+        installToDir(join(process.cwd(), '.cursor', 'skills'), 'Cursor');
       }
 
       if (targets.includes('codex')) {
-        const dir = join(process.cwd(), '.codex', 'skills');
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${skillName}.md`), skillContent);
-        console.log(chalk.green(`✓ Installed to Codex (.codex/skills/${skillName}.md)`));
+        installToDir(join(process.cwd(), '.codex', 'skills'), 'Codex');
       }
 
       if (targets.includes('publish')) {

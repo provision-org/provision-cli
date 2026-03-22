@@ -70,32 +70,30 @@ export function installCommand(program) {
       const home = process.env.HOME;
       const skillContent = skill.skill_content;
 
-      if (targets.includes('claude-code')) {
-        const dir = join(home, '.claude', 'skills');
+      function installToDir(baseDir, label) {
+        const dir = join(baseDir, name);
         mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${name}.md`), skillContent);
-        console.log(chalk.green(`✓ Installed to Claude Code (~/.claude/skills/${name}.md)`));
+        writeFileSync(join(dir, 'SKILL.md'), skillContent);
+        if (skill.readme) {
+          writeFileSync(join(dir, 'README.md'), skill.readme);
+        }
+        console.log(chalk.green(`✓ Installed to ${label} (${dir}/)`));
+      }
+
+      if (targets.includes('claude-code')) {
+        installToDir(join(home, '.claude', 'skills'), 'Claude Code');
       }
 
       if (targets.includes('openclaw')) {
-        const dir = join(home, '.openclaw', 'skills', name);
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, 'SKILL.md'), skillContent);
-        console.log(chalk.green(`✓ Installed to OpenClaw (~/.openclaw/skills/${name}/)`));
+        installToDir(join(home, '.openclaw', 'skills'), 'OpenClaw');
       }
 
       if (targets.includes('cursor')) {
-        const dir = join(process.cwd(), '.cursor', 'skills');
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${name}.md`), skillContent);
-        console.log(chalk.green(`✓ Installed to Cursor (.cursor/skills/${name}.md)`));
+        installToDir(join(process.cwd(), '.cursor', 'skills'), 'Cursor');
       }
 
       if (targets.includes('codex')) {
-        const dir = join(process.cwd(), '.codex', 'skills');
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, `${name}.md`), skillContent);
-        console.log(chalk.green(`✓ Installed to Codex (.codex/skills/${name}.md)`));
+        installToDir(join(process.cwd(), '.codex', 'skills'), 'Codex');
       }
 
       if (targets.length === 0) {
