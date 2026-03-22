@@ -13,7 +13,7 @@ npm install -g @provision-ai/cli
 provision login
 provision teach -d "Search LinkedIn for leads and extract their contact info"
 provision publish linkedin-leads
-provision deploy linkedin-leads
+provision install linkedin-leads
 ```
 
 ## Installation
@@ -189,9 +189,29 @@ Every publish creates a version history record on the server for auditing.
 
 ---
 
+### `provision install <name>`
+
+Install a skill from the Provision marketplace to your local tools. Shows a multi-select menu to choose where to install.
+
+```bash
+provision install linkedin-leads
+```
+
+```
+? Where would you like to install this skill?
+  ◻ Claude Code (~/.claude/skills/)
+  ◻ OpenClaw local (~/.openclaw/skills/)
+  ◻ Cursor (.cursor/skills/)
+  ◻ Codex (.codex/skills/)
+```
+
+Each target gets a proper skill folder with `SKILL.md` and `README.md`.
+
+---
+
 ### `provision pull <name>`
 
-Download a skill from the Provision marketplace.
+Download a skill to `~/.provision/skills/` without installing to any tool.
 
 ```bash
 provision pull linkedin-leads
@@ -246,13 +266,16 @@ provision teach -d "Search LinkedIn Sales Navigator for dental offices in Austin
 # 4. Publish to your team
 provision publish dental-leads
 
-# 5. Deploy to a running agent
+# 5. Install to Claude Code
+provision install dental-leads
+
+# 6. Or deploy to a running Provision agent
 provision deploy dental-leads
 
-# 6. Later, iterate on the skill
+# 7. Later, iterate on the skill
 provision skills edit dental-leads -d "Also check if they have a website form for demo requests"
 
-# 7. Re-publish the updated version
+# 8. Re-publish the updated version
 provision publish dental-leads -c "Added website form check"
 ```
 
