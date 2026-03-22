@@ -22,18 +22,34 @@ class ProvisionAPI {
   }
 
   async request(method, path, body = null) {
-    const url = `${this.baseUrl}/api/cli${path}`;
+    // Re-read baseUrl each time in case it was updated
+    const baseUrl = getApiUrl();
+    const url = `${baseUrl}/api/cli${path}`;
     const options = { method, headers: this.headers };
     if (body) options.body = JSON.stringify(body);
 
+    if (process.env.PROVISION_DEBUG) {
+      console.error(`[DEBUG] ${method} ${url}`);
+      console.error(`[DEBUG] Token: ${this.token ? this.token.slice(0, 8) + '...' : 'none'}`);
+    }
+
     const response = await fetch(url, options);
+
+    if (process.env.PROVISION_DEBUG) {
+      console.error(`[DEBUG] Status: ${response.status}`);
+    }
 
     if (response.status === 401) {
       throw new Error('Not authenticated. Run `provision login` first.');
     }
 
     if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
+      const text = await response.text();
+      if (process.env.PROVISION_DEBUG) {
+        console.error(`[DEBUG] Response body: ${text}`);
+      }
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
       throw new Error(data.message || `API error: ${response.status}`);
     }
 

@@ -1,48 +1,93 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
+import { join, basename } from 'path';
 import { api } from '../api.js';
-import { getSkillsDir } from '../config.js';
+import { getSkillsDir, getToken, getApiUrl } from '../config.js';
 
 export function teachCommand(program) {
   program
     .command('teach')
     .description('Create a new skill by describing what it should do')
     .option('-d, --describe <description>', 'Describe the workflow in text')
+    .option('-v, --video <path>', 'Learn from a screen recording')
     .option('-n, --name <name>', 'Skill name')
     .action(async (options) => {
-      let description = options.describe;
-
-      if (!description) {
-        const answers = await inquirer.prompt([
-          {
-            type: 'editor',
-            name: 'description',
-            message: 'Describe what this skill should do:',
-            default: '# Describe your workflow\n\nExample: Search LinkedIn for dental offices in Austin, TX. For each one, extract their name, phone number, website, and a brief note on why they might need our product.',
-          },
-        ]);
-        description = answers.description;
-      }
-
-      if (!description || description.trim().length < 10) {
-        console.error(chalk.red('Description is too short. Please provide more detail.'));
-        process.exit(1);
-      }
-
-      // Step 1: Generate workflow understanding
-      const spinner = ora('Understanding your workflow...').start();
-
       let result;
-      try {
-        result = await api.generateSkill(description);
-        spinner.succeed('Workflow understood');
-      } catch (err) {
-        spinner.fail('Failed to understand workflow');
-        console.error(chalk.red(err.message));
-        process.exit(1);
+
+      if (options.video) {
+        // Video-based teaching
+        const videoPath = options.video;
+        if (!existsSync(videoPath)) {
+          console.error(chalk.red(`Video file not found: ${videoPath}`));
+          process.exit(1);
+        }
+
+        const spinner = ora('Uploading and analyzing video...').start();
+
+        try {
+          const FormData = (await import('undici')).FormData;
+          const { Blob } = await import('buffer');
+          const videoData = readFileSync(videoPath);
+
+          const formData = new FormData();
+          formData.append('video', new Blob([videoData]), basename(videoPath));
+
+          const baseUrl = getApiUrl();
+          const response = await fetch(`${baseUrl}/api/cli/skills/generate-video`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${getToken()}`,
+              'Accept': 'application/json',
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || `Upload failed: ${response.status}`);
+          }
+
+          result = await response.json();
+          spinner.succeed('Video analyzed');
+        } catch (err) {
+          spinner.fail('Failed to analyze video');
+          console.error(chalk.red(err.message));
+          process.exit(1);
+        }
+      } else {
+        // Text-based teaching
+        let description = options.describe;
+
+        if (!description) {
+          const answers = await inquirer.prompt([
+            {
+              type: 'editor',
+              name: 'description',
+              message: 'Describe what this skill should do:',
+              default: '# Describe your workflow\n\nExample: Search LinkedIn for dental offices in Austin, TX. For each one, extract their name, phone number, website, and a brief note on why they might need our product.',
+            },
+          ]);
+          description = answers.description;
+        }
+
+        if (!description || description.trim().length < 10) {
+          console.error(chalk.red('Description is too short. Please provide more detail.'));
+          process.exit(1);
+        }
+
+        // Step 1: Generate workflow understanding
+        const spinner = ora('Understanding your workflow...').start();
+
+        try {
+          result = await api.generateSkill(description);
+          spinner.succeed('Workflow understood');
+        } catch (err) {
+          spinner.fail('Failed to understand workflow');
+          console.error(chalk.red(err.message));
+          process.exit(1);
+        }
       }
 
       // Step 2: Show extracted steps and confirm
@@ -111,11 +156,15 @@ export function teachCommand(program) {
       }
 
       // Step 4: Generate full skill files
+      const genDescription = options.video
+        ? 'Workflow steps:\n' + finalSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')
+        : (options.describe || '') + '\n\nConfirmed steps:\n' + finalSteps.map((s, i) => `${i + 1}. ${s}`).join('\n');
+
       const genSpinner = ora('Generating skill files...').start();
 
       let skillFiles;
       try {
-        skillFiles = await api.generateSkill(description + '\n\nConfirmed steps:\n' + finalSteps.map((s, i) => `${i + 1}. ${s}`).join('\n'));
+        skillFiles = await api.generateSkill(genDescription);
         genSpinner.succeed('Skill generated');
       } catch (err) {
         genSpinner.fail('Failed to generate skill');
@@ -131,13 +180,13 @@ export function teachCommand(program) {
       writeFileSync(join(skillDir, 'skill.json'), JSON.stringify({
         name: skillName,
         version: '1.0.0',
-        description: skillFiles.description || description.slice(0, 200),
+        description: skillFiles.description || genDescription.slice(0, 200),
         steps: finalSteps,
         tools: result.tools || [],
         requires: { env: result.requires_env || [] },
         tags: skillFiles.tags || [],
       }, null, 2));
-      writeFileSync(join(skillDir, 'README.md'), skillFiles.readme || `# ${skillName}\n\n${description}`);
+      writeFileSync(join(skillDir, 'README.md'), skillFiles.readme || `# ${skillName}\n\n${genDescription}`);
 
       console.log(chalk.green(`\n✓ Skill saved to ${chalk.bold(skillDir)}`));
 
@@ -167,7 +216,7 @@ export function teachCommand(program) {
         try {
           await api.publishSkill({
             name: skillName,
-            description: skillFiles.description || description.slice(0, 200),
+            description: skillFiles.description || genDescription.slice(0, 200),
             skill_content: skillFiles.skill_content,
             readme: skillFiles.readme,
             steps: finalSteps,
