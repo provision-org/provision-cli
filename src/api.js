@@ -86,6 +86,10 @@ class ProvisionAPI {
     return this.request('GET', `/skills/search?q=${encodeURIComponent(query)}`);
   }
 
+  async editSkill(skillContent, modification) {
+    return this.request('POST', '/skills/edit', { skill_content: skillContent, modification });
+  }
+
   // Agents
   async listAgents() {
     return this.request('GET', '/agents');
