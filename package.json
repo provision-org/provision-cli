@@ -1,0 +1,31 @@
+{
+  "name": "@provision-ai/cli",
+  "version": "0.1.0",
+  "description": "Teach AI agents new skills — create, test, and publish skills for OpenClaw agents",
+  "bin": {
+    "provision": "./bin/provision.js"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "test": "echo 'Tests coming soon'"
+  },
+  "keywords": ["ai", "agent", "skills", "openclaw", "provision", "cli"],
+  "author": "Provision AI, Inc.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/provision-ai/cli"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "chalk": "^5.4.0",
+    "ora": "^8.0.0",
+    "open": "^10.0.0",
+    "inquirer": "^12.0.0",
+    "conf": "^13.0.0"
+  }
+}
