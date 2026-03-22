@@ -7,6 +7,7 @@ import { teachCommand } from '../src/commands/teach.js';
 import { skillsCommand } from '../src/commands/skills.js';
 import { publishCommand } from '../src/commands/publish.js';
 import { pullCommand } from '../src/commands/pull.js';
+import { installCommand } from '../src/commands/install.js';
 import { deployCommand } from '../src/commands/deploy.js';
 import { agentsCommand } from '../src/commands/agents.js';
 
@@ -22,6 +23,7 @@ teachCommand(program);
 skillsCommand(program);
 publishCommand(program);
 pullCommand(program);
+installCommand(program);
 deployCommand(program);
 agentsCommand(program);
 
