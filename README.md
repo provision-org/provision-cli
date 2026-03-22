@@ -25,13 +25,19 @@ Requires Node.js 18 or later.
 
 ## Authentication
 
-Get your API token from [provision.ai/settings/api](https://provision.ai/settings/api), then:
-
 ```bash
 provision login
 ```
 
-You'll be prompted to paste your token. To verify:
+This opens your browser to authorize the CLI with your Provision account. Once approved, you're logged in automatically.
+
+For CI/CD or environments without a browser, use manual token entry:
+
+```bash
+provision login --token
+```
+
+To verify:
 
 ```bash
 provision whoami
@@ -52,9 +58,42 @@ provision teach -d "Search LinkedIn for dental offices in Austin, TX and extract
 
 # With a name
 provision teach -d "Monitor Hacker News for AI mentions" -n hn-monitor
+
+# From a screen recording
+provision teach --video demo.mp4
 ```
 
-The CLI sends your description to the Provision API, which breaks it into steps for confirmation, then generates the skill files (SKILL.md, skill.json, README.md).
+The CLI sends your input to the Provision API, which breaks it into steps for confirmation, then generates the skill files (SKILL.md, skill.json, README.md).
+
+### Teaching from Video
+
+Record your screen showing the workflow you want the agent to learn, then:
+
+```bash
+provision teach --video my-workflow.mp4
+```
+
+Supported formats: MP4, WebM, QuickTime (MOV). Max file size: 100MB.
+
+The AI watches your recording and extracts **what** you're doing (not the exact clicks). For example, if you record yourself searching LinkedIn and copying company info into a spreadsheet, it extracts:
+
+```
+I think your workflow is:
+  1. Search LinkedIn for target companies
+  2. Open each company profile
+  3. Extract name, size, and contact info
+  4. Save results to spreadsheet
+
+Is this correct? [Confirm] [Edit] [Cancel]
+```
+
+You confirm or edit the steps, name the skill, and it generates the SKILL.md. The agent figures out the **how** on its own using its browser and tools.
+
+Tips for good recordings:
+- Keep it under 5 minutes — focus on the core workflow
+- Show the full flow from start to finish
+- Don't worry about mistakes — the AI extracts the intent, not the exact steps
+- Narrating what you're doing (even silently mouthing) can help the AI understand
 
 ### `provision skills list`
 
