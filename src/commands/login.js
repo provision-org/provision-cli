@@ -15,7 +15,6 @@ export function loginCommand(program) {
       console.log(chalk.bold('\nProvision Login\n'));
 
       if (options.token) {
-        // Manual token entry
         const { token } = await inquirer.prompt([
           {
             type: 'password',
@@ -41,8 +40,8 @@ export function loginCommand(program) {
       // Browser-based login
       const state = randomBytes(24).toString('hex');
       const port = 9876 + Math.floor(Math.random() * 100);
+      let timeoutId;
 
-      // Start local callback server
       const tokenPromise = new Promise((resolve, reject) => {
         const server = createServer((req, res) => {
           const url = new URL(req.url, `http://127.0.0.1:${port}`);
@@ -53,14 +52,16 @@ export function loginCommand(program) {
 
             if (returnedState !== state) {
               res.writeHead(400, { 'Content-Type': 'text/html' });
-              res.end('<html><body><h2>Error: Invalid state</h2><p>Please try again.</p></body></html>');
+              res.end('<html><body><h2>Error: Invalid state</h2></body></html>');
               reject(new Error('State mismatch'));
               return;
             }
 
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end('<html><body style="font-family:system-ui;text-align:center;padding:60px"><h2>✓ Authenticated!</h2><p>You can close this window and return to your terminal.</p></body></html>');
+            res.end('<html><body style="font-family:system-ui;text-align:center;padding:60px"><h2>\u2713 Authenticated!</h2><p>You can close this window and return to your terminal.</p><script>setTimeout(()=>window.close(),2000)</script></body></html>');
 
+            // Clean up: close server and clear timeout so process can exit
+            clearTimeout(timeoutId);
             server.close();
             resolve(token);
           } else {
@@ -69,12 +70,9 @@ export function loginCommand(program) {
           }
         });
 
-        server.listen(port, '127.0.0.1', () => {
-          // Server ready
-        });
+        server.listen(port, '127.0.0.1');
 
-        // Timeout after 2 minutes
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           server.close();
           reject(new Error('Login timed out. Try again or use `provision login --token`.'));
         }, 120000);
@@ -90,7 +88,7 @@ export function loginCommand(program) {
       try {
         await open(authUrl);
       } catch {
-        // Browser open failed — user can manually visit the URL
+        // Browser open failed
       }
 
       console.log('Waiting for authorization...');
