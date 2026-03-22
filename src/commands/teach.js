@@ -28,12 +28,27 @@ export function teachCommand(program) {
 
         try {
           const videoData = readFileSync(videoPath);
-          const videoBlob = new Blob([videoData]);
+          const ext = basename(videoPath).split('.').pop()?.toLowerCase();
+          const mimeTypes = {
+            mp4: 'video/mp4',
+            webm: 'video/webm',
+            mov: 'video/quicktime',
+            qt: 'video/quicktime',
+          };
+          const mimeType = mimeTypes[ext] || 'video/mp4';
+
+          const videoFile = new File([videoData], basename(videoPath), { type: mimeType });
 
           const formData = new FormData();
-          formData.append('video', videoBlob, basename(videoPath));
+          formData.append('video', videoFile);
 
           const baseUrl = getApiUrl();
+
+          if (process.env.PROVISION_DEBUG) {
+            console.error(`[DEBUG] Uploading ${basename(videoPath)} (${(videoData.length / 1024 / 1024).toFixed(1)}MB, ${mimeType})`);
+            console.error(`[DEBUG] POST ${baseUrl}/api/cli/skills/generate-video`);
+          }
+
           const response = await fetch(`${baseUrl}/api/cli/skills/generate-video`, {
             method: 'POST',
             headers: {
@@ -44,7 +59,13 @@ export function teachCommand(program) {
           });
 
           if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
+            const text = await response.text();
+            if (process.env.PROVISION_DEBUG) {
+              console.error(`[DEBUG] Status: ${response.status}`);
+              console.error(`[DEBUG] Body: ${text.slice(0, 500)}`);
+            }
+            let err = {};
+            try { err = JSON.parse(text); } catch {}
             throw new Error(err.message || `Upload failed: ${response.status}`);
           }
 
