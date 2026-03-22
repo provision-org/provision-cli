@@ -210,34 +210,59 @@ export function teachCommand(program) {
 
       console.log(chalk.green(`\n✓ Skill saved to ${chalk.bold(skillDir)}`));
 
-      // Step 6: Offer install options
-      const { install } = await inquirer.prompt([
+      // Step 6: Offer install options (multi-select)
+      const { targets } = await inquirer.prompt([
         {
-          type: 'list',
-          name: 'install',
+          type: 'checkbox',
+          name: 'targets',
           message: 'Where would you like to install this skill?',
           choices: [
-            { name: 'Local OpenClaw (~/.openclaw/skills/)', value: 'openclaw' },
             { name: 'Publish to Provision', value: 'publish' },
-            { name: 'Just keep it local for now', value: 'none' },
+            { name: 'Claude Code (~/.claude/skills/)', value: 'claude-code' },
+            { name: 'OpenClaw local (~/.openclaw/skills/)', value: 'openclaw' },
+            { name: 'Cursor (.cursor/skills/)', value: 'cursor' },
+            { name: 'Codex (.codex/skills/)', value: 'codex' },
           ],
         },
       ]);
 
-      if (install === 'openclaw') {
-        const openClawDir = join(process.env.HOME, '.openclaw', 'skills', skillName);
-        mkdirSync(openClawDir, { recursive: true });
-        writeFileSync(join(openClawDir, 'SKILL.md'), skillFiles.skill_content);
-        console.log(chalk.green(`✓ Installed to ${openClawDir}`));
-        console.log(chalk.dim('  Restart OpenClaw to activate the skill.'));
+      const home = process.env.HOME;
+      const skillContent = skillFiles.skill_content;
+
+      if (targets.includes('openclaw')) {
+        const dir = join(home, '.openclaw', 'skills', skillName);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'SKILL.md'), skillContent);
+        console.log(chalk.green(`✓ Installed to OpenClaw (${dir})`));
       }
 
-      if (install === 'publish') {
+      if (targets.includes('claude-code')) {
+        const dir = join(home, '.claude', 'skills');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, `${skillName}.md`), skillContent);
+        console.log(chalk.green(`✓ Installed to Claude Code (~/.claude/skills/${skillName}.md)`));
+      }
+
+      if (targets.includes('cursor')) {
+        const dir = join(process.cwd(), '.cursor', 'skills');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, `${skillName}.md`), skillContent);
+        console.log(chalk.green(`✓ Installed to Cursor (.cursor/skills/${skillName}.md)`));
+      }
+
+      if (targets.includes('codex')) {
+        const dir = join(process.cwd(), '.codex', 'skills');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, `${skillName}.md`), skillContent);
+        console.log(chalk.green(`✓ Installed to Codex (.codex/skills/${skillName}.md)`));
+      }
+
+      if (targets.includes('publish')) {
         try {
           await api.publishSkill({
             name: skillName,
             description: skillFiles.description || genDescription.slice(0, 200),
-            skill_content: skillFiles.skill_content,
+            skill_content: skillContent,
             readme: skillFiles.readme,
             steps: finalSteps,
             tools: result.tools || [],
@@ -249,6 +274,10 @@ export function teachCommand(program) {
         } catch (err) {
           console.error(chalk.red(`Failed to publish: ${err.message}`));
         }
+      }
+
+      if (targets.length === 0) {
+        console.log(chalk.dim('Skill saved locally only.'));
       }
 
       console.log('');
