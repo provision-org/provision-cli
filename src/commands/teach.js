@@ -27,12 +27,11 @@ export function teachCommand(program) {
         const spinner = ora('Uploading and analyzing video...').start();
 
         try {
-          const FormData = (await import('undici')).FormData;
-          const { Blob } = await import('buffer');
           const videoData = readFileSync(videoPath);
+          const videoBlob = new Blob([videoData]);
 
           const formData = new FormData();
-          formData.append('video', new Blob([videoData]), basename(videoPath));
+          formData.append('video', videoBlob, basename(videoPath));
 
           const baseUrl = getApiUrl();
           const response = await fetch(`${baseUrl}/api/cli/skills/generate-video`, {
