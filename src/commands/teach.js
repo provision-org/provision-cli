@@ -17,14 +17,14 @@ export function teachCommand(program) {
       let result;
 
       if (options.video) {
-        // Video-based teaching
+        // Video-based teaching (async: upload → poll for completion)
         const videoPath = options.video;
         if (!existsSync(videoPath)) {
           console.error(chalk.red(`Video file not found: ${videoPath}`));
           process.exit(1);
         }
 
-        const spinner = ora('Uploading and analyzing video...').start();
+        const spinner = ora('Uploading video...').start();
 
         try {
           const videoData = readFileSync(videoPath);
@@ -49,7 +49,7 @@ export function teachCommand(program) {
             console.error(`[DEBUG] POST ${baseUrl}/api/cli/skills/generate-video`);
           }
 
-          const response = await fetch(`${baseUrl}/api/cli/skills/generate-video`, {
+          const uploadResponse = await fetch(`${baseUrl}/api/cli/skills/generate-video`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${getToken()}`,
@@ -58,19 +58,57 @@ export function teachCommand(program) {
             body: formData,
           });
 
-          if (!response.ok) {
-            const text = await response.text();
+          if (!uploadResponse.ok) {
+            const text = await uploadResponse.text();
             if (process.env.PROVISION_DEBUG) {
-              console.error(`[DEBUG] Status: ${response.status}`);
+              console.error(`[DEBUG] Status: ${uploadResponse.status}`);
               console.error(`[DEBUG] Body: ${text.slice(0, 500)}`);
             }
             let err = {};
             try { err = JSON.parse(text); } catch {}
-            throw new Error(err.message || `Upload failed: ${response.status}`);
+            throw new Error(err.message || `Upload failed: ${uploadResponse.status}`);
           }
 
-          result = await response.json();
-          spinner.succeed('Video analyzed');
+          const { generation_id } = await uploadResponse.json();
+          spinner.succeed('Video uploaded');
+
+          // Poll for completion
+          const pollSpinner = ora('Analyzing video and generating skill (this may take a few minutes)...').start();
+
+          const poll = async () => {
+            while (true) {
+              await new Promise(r => setTimeout(r, 5000));
+
+              const statusResponse = await fetch(`${baseUrl}/api/cli/skills/generations/${generation_id}`, {
+                headers: {
+                  'Authorization': `Bearer ${getToken()}`,
+                  'Accept': 'application/json',
+                },
+              });
+
+              if (!statusResponse.ok) {
+                throw new Error('Failed to check generation status');
+              }
+
+              const data = await statusResponse.json();
+
+              if (data.status === 'completed') {
+                return data.result;
+              }
+
+              if (data.status === 'failed') {
+                throw new Error(data.error || 'Video analysis failed');
+              }
+
+              // Still processing — update spinner
+              if (data.status === 'processing') {
+                pollSpinner.text = 'Extracting workflow from video...';
+              }
+            }
+          };
+
+          result = await poll();
+          pollSpinner.succeed('Skill generated from video');
         } catch (err) {
           spinner.fail('Failed to analyze video');
           console.error(chalk.red(err.message));
