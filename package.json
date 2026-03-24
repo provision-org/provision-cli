@@ -1,7 +1,7 @@
 {
   "name": "@provision-ai/cli",
   "version": "0.5.2",
-  "description": "Teach AI agents new skills — create, test, and publish skills for OpenClaw agents",
+  "description": "Turn workflows into reusable AI skills. Record your screen or describe a task — works with Claude Code, Cursor, Codex, and OpenClaw.",
   "bin": {
     "provision": "./bin/provision.js"
   },
