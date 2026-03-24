@@ -3,20 +3,21 @@
 [![npm version](https://img.shields.io/npm/v/@provision-ai/cli.svg)](https://www.npmjs.com/package/@provision-ai/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Teach AI agents new skills from natural language or video. Create, edit, publish, and deploy skills for [OpenClaw](https://openclaw.ai) agents through the [Provision](https://provision.ai) platform.
+Turn your workflows into reusable AI skills. Describe a task or record your screen — the CLI generates a structured skill that works with Claude Code, Cursor, Codex, and [OpenClaw](https://openclaw.ai) agents. Share skills with your team through [Provision AI](https://provision.ai).
 
 ## Quick Start
 
 ```bash
-# No install needed
-npx @provision-ai/cli login
-npx @provision-ai/cli teach -d "Search LinkedIn for leads and extract their contact info"
-npx @provision-ai/cli publish linkedin-leads
-npx @provision-ai/cli install linkedin-leads
+# No account needed — bring your own API key
+GEMINI_API_KEY=your-key npx @provision-ai/cli teach -v my-workflow.mp4
 
-# Or install globally
-npm install -g @provision-ai/cli
-provision teach -d "Search LinkedIn for leads and extract their contact info"
+# Or with a text description
+OPENAI_API_KEY=your-key npx @provision-ai/cli teach -d "Search LinkedIn for leads"
+
+# With a Provision account (for team sharing)
+npx @provision-ai/cli login
+npx @provision-ai/cli teach -v my-workflow.mp4
+npx @provision-ai/cli publish linkedin-leads
 ```
 
 ## Installation
@@ -37,7 +38,40 @@ npm install -g @provision-ai/cli
 
 Requires Node.js 18 or later.
 
-## Authentication
+## Offline Mode (No Account Needed)
+
+Use the CLI without a Provision account by providing your own API keys as environment variables:
+
+```bash
+# Video-to-skill (requires Gemini for video analysis)
+GEMINI_API_KEY=your-key npx @provision-ai/cli teach -v demo.mp4
+
+# Text-to-skill (works with any supported key)
+ANTHROPIC_API_KEY=your-key npx @provision-ai/cli teach -d "Describe your workflow"
+OPENAI_API_KEY=your-key npx @provision-ai/cli teach -d "Describe your workflow"
+GEMINI_API_KEY=your-key npx @provision-ai/cli teach -d "Describe your workflow"
+```
+
+**Supported API keys:**
+
+| Key | Used for | Get one at |
+|-----|----------|------------|
+| `GEMINI_API_KEY` | Video analysis (step 1) + text generation | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (free) |
+| `ANTHROPIC_API_KEY` | Skill structuring (best quality) | [console.anthropic.com](https://console.anthropic.com) |
+| `OPENAI_API_KEY` | Skill structuring (fallback) | [platform.openai.com](https://platform.openai.com) |
+
+For video processing, `GEMINI_API_KEY` is required. For structuring, the CLI tries Anthropic first, then OpenAI, then Gemini.
+
+Skills created offline are saved locally. To share with your team, log in and publish:
+
+```bash
+npx @provision-ai/cli login
+npx @provision-ai/cli publish my-skill
+```
+
+---
+
+## Authentication (For Team Features)
 
 ### Browser Login (default)
 
@@ -99,11 +133,14 @@ provision teach -v demo.mp4
 | `-v, --video <path>` | Learn from a screen recording (MP4, WebM, MOV) |
 | `-n, --name <name>` | Set the skill name (lowercase, hyphens) |
 
-The CLI sends your input to the Provision API, which extracts workflow steps for confirmation, then generates the skill files.
+When logged in, the CLI uses the Provision API. In offline mode (with your own API keys), everything runs locally.
 
 After generation, you can choose to:
-- Install locally to OpenClaw (`~/.openclaw/skills/`)
-- Publish to your team on Provision
+- Publish to your team on Provision AI (requires login)
+- Install to Claude Code (`~/.claude/skills/`)
+- Install to OpenClaw (`~/.openclaw/skills/`)
+- Install to Cursor (`.cursor/skills/`)
+- Install to Codex (`.codex/skills/`)
 - Keep it local only (`~/.provision/skills/`)
 
 ### Teaching from Video
@@ -116,22 +153,26 @@ provision teach -v my-workflow.mp4
 
 Supported formats: MP4, WebM, QuickTime (MOV). Max file size: 100MB.
 
-The AI extracts **what** you're doing, not the exact clicks. For example:
+The AI extracts every URL, click, filter, and form input — not just a summary. Add a voice over to capture your reasoning and preferences. For example:
 
 ```
 I think your workflow is:
-  1. Search LinkedIn for target companies
-  2. Open each company profile
-  3. Extract name, size, and contact info
-  4. Save results to spreadsheet
+
+  1. Navigate to linkedin.com/sales/home. If not logged in, sign in.
+  2. Click 'Lead filters' to open the search interface.
+  3. Click 'Company Headcount' filter, select '11-50'.
+  4. Click 'Current Job Title', type 'VP of Sales'.
+  5. Click 'Geography' filter, select 'United States'.
+  ...+27 more steps
 
 Is this correct? [Confirm] [Edit] [Cancel]
 ```
 
 Tips for good recordings:
-- Keep it under 5 minutes
+- Add a voice over explaining what you're doing and why
 - Show the full flow from start to finish
-- Don't worry about mistakes — the AI extracts the intent, not the exact steps
+- Don't worry about mistakes — the AI understands your intent
+- Longer videos produce more detailed skills
 
 ---
 
