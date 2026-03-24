@@ -8,11 +8,9 @@ Turn your workflows into reusable AI skills. Describe a task or record your scre
 ## Quick Start
 
 ```bash
-# No account needed — bring your own API key
+# No account needed — just a free Gemini API key
 GEMINI_API_KEY=your-key npx @provision-ai/cli teach -v my-workflow.mp4
-
-# Or with a text description
-OPENAI_API_KEY=your-key npx @provision-ai/cli teach -d "Search LinkedIn for leads"
+GEMINI_API_KEY=your-key npx @provision-ai/cli teach -d "Search LinkedIn for leads"
 
 # With a Provision account (for team sharing)
 npx @provision-ai/cli login
@@ -40,27 +38,17 @@ Requires Node.js 18 or later.
 
 ## Offline Mode (No Account Needed)
 
-Use the CLI without a Provision account by providing your own API keys as environment variables:
+Use the CLI without a Provision account — just set your Gemini API key:
 
 ```bash
-# Video-to-skill (requires Gemini for video analysis)
+# Video-to-skill
 GEMINI_API_KEY=your-key npx @provision-ai/cli teach -v demo.mp4
 
-# Text-to-skill (works with any supported key)
-ANTHROPIC_API_KEY=your-key npx @provision-ai/cli teach -d "Describe your workflow"
-OPENAI_API_KEY=your-key npx @provision-ai/cli teach -d "Describe your workflow"
+# Text-to-skill
 GEMINI_API_KEY=your-key npx @provision-ai/cli teach -d "Describe your workflow"
 ```
 
-**Supported API keys:**
-
-| Key | Used for | Get one at |
-|-----|----------|------------|
-| `GEMINI_API_KEY` | Video analysis (step 1) + text generation | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (free) |
-| `ANTHROPIC_API_KEY` | Skill structuring (best quality) | [console.anthropic.com](https://console.anthropic.com) |
-| `OPENAI_API_KEY` | Skill structuring (fallback) | [platform.openai.com](https://platform.openai.com) |
-
-For video processing, `GEMINI_API_KEY` is required. For structuring, the CLI tries Anthropic first, then OpenAI, then Gemini.
+Get a free Gemini API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 
 Skills created offline are saved locally. To share with your team, log in and publish:
 

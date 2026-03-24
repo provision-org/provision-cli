@@ -6,7 +6,7 @@ import { join, basename } from 'path';
 import { api } from '../api.js';
 import { getSkillsDir, getToken, getApiUrl } from '../config.js';
 import {
-  getOfflineKeys,
+  getOfflineKey,
   canRunOffline,
   extractSopFromVideo,
   structureSop,
@@ -21,19 +21,19 @@ export function teachCommand(program) {
     .option('-v, --video <path>', 'Learn from a screen recording')
     .option('-n, --name <name>', 'Skill name')
     .action(async (options) => {
-      // Determine mode: online (Provision API) or offline (own keys)
+      // Determine mode: online (Provision API) or offline (Gemini key)
       const token = getToken();
-      const keys = getOfflineKeys();
-      const isOffline = !token && canRunOffline(keys);
+      const geminiKey = getOfflineKey();
+      const isOffline = !token && canRunOffline();
 
-      if (!token && !canRunOffline(keys)) {
-        console.log(chalk.yellow('Not logged in and no API keys found.\n'));
+      if (!token && !geminiKey) {
+        console.log(chalk.yellow('Not logged in and no API key found.\n'));
         console.log('Option 1: Log in to Provision');
         console.log(chalk.dim('  npx @provision-ai/cli login\n'));
-        console.log('Option 2: Bring your own API key');
+        console.log('Option 2: Bring your own Gemini API key (free)');
         console.log(chalk.dim('  GEMINI_API_KEY=your-key npx @provision-ai/cli teach -v demo.mp4'));
-        console.log(chalk.dim('  OPENAI_API_KEY=your-key npx @provision-ai/cli teach -d "..."\n'));
-        console.log(chalk.dim('Get a free Gemini key at: https://aistudio.google.com/apikey'));
+        console.log(chalk.dim('  GEMINI_API_KEY=your-key npx @provision-ai/cli teach -d "..."\n'));
+        console.log(chalk.dim('Get a free key at: https://aistudio.google.com/apikey'));
         process.exit(1);
       }
 
@@ -52,7 +52,7 @@ export function teachCommand(program) {
 
         if (isOffline) {
           // ── Offline video processing ──
-          result = await offlineVideoTeach(videoPath, keys);
+          result = await offlineVideoTeach(videoPath, geminiKey);
         } else {
           // ── Online video processing (upload to Provision → poll) ──
           result = await onlineVideoTeach(videoPath);
@@ -81,7 +81,7 @@ export function teachCommand(program) {
         if (isOffline) {
           const spinner = ora('Generating skill...').start();
           try {
-            result = await generateFromText(description, keys);
+            result = await generateFromText(description, geminiKey);
             spinner.succeed('Skill generated');
           } catch (err) {
             spinner.fail('Failed to generate skill');
@@ -176,7 +176,7 @@ export function teachCommand(program) {
         const genSpinner = ora('Generating skill files...').start();
         try {
           if (isOffline) {
-            skillFiles = await generateFromText(genDescription, keys);
+            skillFiles = await generateFromText(genDescription, geminiKey);
           } else {
             skillFiles = await api.generateSkill(genDescription);
           }
@@ -358,14 +358,7 @@ async function onlineVideoTeach(videoPath) {
 
 // ── Offline video processing ──
 
-async function offlineVideoTeach(videoPath, keys) {
-  if (!keys.gemini) {
-    console.error(chalk.red('Video processing requires a Gemini API key.'));
-    console.log(chalk.dim('  GEMINI_API_KEY=your-key npx @provision-ai/cli teach -v demo.mp4'));
-    console.log(chalk.dim('  Get a free key at: https://aistudio.google.com/apikey'));
-    process.exit(1);
-  }
-
+async function offlineVideoTeach(videoPath, geminiKey) {
   const videoData = readFileSync(videoPath);
   const ext = basename(videoPath).split('.').pop()?.toLowerCase();
   const mimeTypes = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', qt: 'video/quicktime' };
@@ -378,7 +371,7 @@ async function offlineVideoTeach(videoPath, keys) {
 
   let rawSop;
   try {
-    rawSop = await extractSopFromVideo(videoData, mimeType, keys.gemini);
+    rawSop = await extractSopFromVideo(videoData, mimeType, geminiKey);
     sopSpinner.succeed('Video analyzed — SOP extracted');
   } catch (err) {
     sopSpinner.fail('Failed to analyze video');
@@ -386,11 +379,11 @@ async function offlineVideoTeach(videoPath, keys) {
     process.exit(1);
   }
 
-  // Step 2: Structure SOP into skill
+  // Step 2: Gemini structures SOP into skill
   const structureSpinner = ora('Structuring skill...').start();
 
   try {
-    const result = await structureSop(rawSop, keys);
+    const result = await structureSop(rawSop, geminiKey);
     result.raw_sop = rawSop;
     structureSpinner.succeed('Skill generated from video');
     return result;
