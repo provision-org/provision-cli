@@ -46,14 +46,19 @@ class ProvisionAPI {
     if (!response.ok) {
       const text = await response.text();
       if (process.env.PROVISION_DEBUG) {
-        console.error(`[DEBUG] Response body: ${text}`);
+        console.error(`[DEBUG] Response body: ${text.slice(0, 500)}`);
       }
       let data = {};
       try { data = JSON.parse(text); } catch {}
       throw new Error(data.message || `API error: ${response.status}`);
     }
 
-    return response.json();
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error('Unexpected response from server. You may need to log in again: npx @provision-ai/cli login');
+    }
   }
 
   // Auth

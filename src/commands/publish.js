@@ -3,7 +3,7 @@ import ora from 'ora';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { api } from '../api.js';
-import { getSkillsDir } from '../config.js';
+import { getSkillsDir, getToken } from '../config.js';
 
 function bumpVersion(version) {
   const parts = (version || '1.0.0').split('.').map(Number);
@@ -27,6 +27,11 @@ export function publishCommand(program) {
     .description('Publish a local skill to your team on Provision')
     .option('-c, --changelog <message>', 'Changelog message for this version')
     .action(async (name, options) => {
+      if (!getToken()) {
+        console.error(chalk.red('Not logged in. Run `npx @provision-ai/cli login` first.'));
+        process.exit(1);
+      }
+
       const skillDir = join(getSkillsDir(), name);
       const jsonPath = join(skillDir, 'skill.json');
       const skillPath = join(skillDir, 'SKILL.md');
