@@ -1,7 +1,7 @@
 {
   "name": "@provision-ai/cli",
   "version": "0.5.2",
-  "description": "Turn workflows into reusable AI skills. Record your screen or describe a task — works with Claude Code, Cursor, Codex, and OpenClaw.",
+  "description": "Turn workflows into reusable AI skills — by Provision AI. Record your screen or describe a task. Works with Claude Code, Cursor, Codex, and OpenClaw.",
   "bin": {
     "provision": "./bin/provision.js"
   },
