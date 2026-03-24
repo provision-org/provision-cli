@@ -7,27 +7,45 @@ Turn your workflows into reusable AI skills. Record your screen or describe a ta
 
 ## The Problem
 
-You know the best way to do your job. But every time you use an AI tool, you have to re-explain the same processes — the URLs, the filters, the steps, the preferences. That knowledge lives in your head, and it doesn't scale.
+Teams are increasingly using AI tools like Claude Code, Codex, and OpenClaw. A common pattern is emerging:
+
+- One person figures out a powerful workflow
+- Others struggle to replicate it
+- Knowledge gets shared via Slack messages, docs, or copied prompts
+- Nothing is standardized or reusable
+
+Even when teams try to create "skills," it's hard — writing structured skill files manually, defining triggers and steps, sharing via GitHub or zip files, installing across different tools.
+
+**There is no simple way to capture how someone works and make it reusable across a team — or usable by AI agents.**
 
 ## What This CLI Does
 
-The Provision CLI extracts your expertise into **skills** — structured instructions that AI tools follow exactly. Two ways to create them:
+The Provision CLI solves this. Two ways to create skills:
 
-1. **Record your screen** doing the task → the CLI analyzes the video and extracts every step, URL, click, and decision
-2. **Describe the workflow** in text → the CLI generates a structured skill definition
+1. **Record your screen** doing the task → the CLI analyzes the video and extracts every step, URL, click, and decision — including the tacit knowledge you'd never think to write down
+2. **Describe the workflow** in plain text → the CLI generates a structured skill definition
 
 Skills install into **Claude Code**, **Cursor**, **Codex**, and **OpenClaw** agents. Create once, use everywhere.
 
 ## What is Provision AI?
 
-[Provision AI](https://provision.ai) is the team layer on top of this CLI. While the CLI works standalone with a free Gemini API key, Provision adds:
+[Provision AI](https://provision.ai) is the platform behind this CLI. While the CLI works standalone with a free Gemini API key, Provision adds the team and agent layers:
 
-- **Team skill library** — publish skills and share them across your team
-- **Version control** — track changes, iterate together
-- **Cloud agents** — deploy AI agents that run your skills 24/7 in Slack, Telegram, and Discord
-- **Web UI** — create skills from your browser without a terminal
+**Team Skill Library**
+- Publish skills to a private team registry
+- Version control — track changes, iterate together
+- Anyone on the team can install any skill into their own tools
+- Web UI for non-developers to create skills without a terminal
 
-The CLI is free and open source. Team features require a [Provision account](https://provision.ai).
+**Cloud Agents**
+- Deploy AI agents that run your team's skills autonomously — 24/7
+- Agents live in Slack, Telegram, and Discord
+- Full browser access for web workflows
+- Managed infrastructure — no servers to configure
+
+For companies going AI-native, Provision is where your AI workforce lives. Your team builds the skills. Your agents run them.
+
+The CLI is free and open source. Team features and agents require a [Provision account](https://provision.ai).
 
 ## Quick Start
 
