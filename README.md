@@ -3,7 +3,31 @@
 [![npm version](https://img.shields.io/npm/v/@provision-ai/cli.svg)](https://www.npmjs.com/package/@provision-ai/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Turn your workflows into reusable AI skills. Describe a task or record your screen — the CLI generates a structured skill that works with Claude Code, Cursor, Codex, and [OpenClaw](https://openclaw.ai) agents. Share skills with your team through [Provision AI](https://provision.ai).
+Turn your workflows into reusable AI skills. Record your screen or describe a task — the CLI generates structured skills that any AI tool can follow.
+
+## The Problem
+
+You know the best way to do your job. But every time you use an AI tool, you have to re-explain the same processes — the URLs, the filters, the steps, the preferences. That knowledge lives in your head, and it doesn't scale.
+
+## What This CLI Does
+
+The Provision CLI extracts your expertise into **skills** — structured instructions that AI tools follow exactly. Two ways to create them:
+
+1. **Record your screen** doing the task → the CLI analyzes the video and extracts every step, URL, click, and decision
+2. **Describe the workflow** in text → the CLI generates a structured skill definition
+
+Skills install into **Claude Code**, **Cursor**, **Codex**, and **OpenClaw** agents. Create once, use everywhere.
+
+## What is Provision AI?
+
+[Provision AI](https://provision.ai) is the team layer on top of this CLI. While the CLI works standalone with a free Gemini API key, Provision adds:
+
+- **Team skill library** — publish skills and share them across your team
+- **Version control** — track changes, iterate together
+- **Cloud agents** — deploy AI agents that run your skills 24/7 in Slack, Telegram, and Discord
+- **Web UI** — create skills from your browser without a terminal
+
+The CLI is free and open source. Team features require a [Provision account](https://provision.ai).
 
 ## Quick Start
 
