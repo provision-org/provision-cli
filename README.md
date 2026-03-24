@@ -330,11 +330,8 @@ node bin/provision.js --help
 
 ## Links
 
-- [Provision](https://provision.ai) — Deploy AI agents as team members
-- [CLI Landing Page](https://provision.ai/cli) — Install guide and examples
-- [Skills Marketplace](https://provision.ai/skills) — Browse and install skills
+- [Provision AI](https://provision.ai) — Build and share AI skills for your team
 - [API Tokens](https://provision.ai/settings/api) — Generate CLI tokens
-- [OpenClaw](https://openclaw.ai) — The agent runtime
 
 ## License
 
