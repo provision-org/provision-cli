@@ -30,7 +30,7 @@ class ProvisionAPI {
 
     if (process.env.PROVISION_DEBUG) {
       console.error(`[DEBUG] ${method} ${url}`);
-      console.error(`[DEBUG] Token: ${this.token ? this.token.slice(0, 8) + '...' : 'none'}`);
+      console.error(`[DEBUG] Token: ${this.token ? '***' + this.token.slice(-4) : 'none'}`);
     }
 
     const response = await fetch(url, options);
@@ -46,7 +46,7 @@ class ProvisionAPI {
     if (!response.ok) {
       const text = await response.text();
       if (process.env.PROVISION_DEBUG) {
-        console.error(`[DEBUG] Response body: ${text.slice(0, 500)}`);
+        console.error(`[DEBUG] Response body: ${text.slice(0, 200)}`);
       }
       let data = {};
       try { data = JSON.parse(text); } catch {}

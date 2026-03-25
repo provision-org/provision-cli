@@ -4,13 +4,19 @@ import inquirer from 'inquirer';
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { api } from '../api.js';
-import { getSkillsDir } from '../config.js';
+import { getSkillsDir, sanitizeSkillName } from '../config.js';
 
 export function installCommand(program) {
   program
     .command('install <name>')
     .description('Install a skill from Provision marketplace')
-    .action(async (name) => {
+    .action(async (rawName) => {
+      const name = sanitizeSkillName(rawName);
+      if (!name) {
+        console.error(chalk.red('Invalid skill name. Use lowercase letters, numbers, and hyphens only.'));
+        process.exit(1);
+      }
+
       const spinner = ora(`Fetching ${name}...`).start();
 
       let skill;

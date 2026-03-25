@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'fs';
 import { join, basename } from 'path';
 import { api } from '../api.js';
-import { getSkillsDir, getToken, getApiUrl } from '../config.js';
+import { getSkillsDir, getToken, getApiUrl, sanitizeSkillName } from '../config.js';
 
 function bumpVersion(version) {
   const parts = (version || '1.0.0').split('.').map(Number);
@@ -50,7 +50,9 @@ export function skillsCommand(program) {
   cmd
     .command('info <name>')
     .description('Show skill details')
-    .action((name) => {
+    .action((rawName) => {
+      const name = sanitizeSkillName(rawName);
+      if (!name) { console.error(chalk.red('Invalid skill name.')); process.exit(1); }
       const skillDir = join(getSkillsDir(), name);
       const jsonPath = join(skillDir, 'skill.json');
 
@@ -81,7 +83,9 @@ export function skillsCommand(program) {
     .option('-d, --describe <prompt>', 'Modify with natural language instructions')
     .option('-v, --video <path>', 'Re-teach from a video')
     .option('-e, --editor', 'Open SKILL.md in your editor')
-    .action(async (name, options) => {
+    .action(async (rawName, options) => {
+      const name = sanitizeSkillName(rawName);
+      if (!name) { console.error(chalk.red('Invalid skill name.')); process.exit(1); }
       const skillDir = join(getSkillsDir(), name);
       const jsonPath = join(skillDir, 'skill.json');
       const skillPath = join(skillDir, 'SKILL.md');
@@ -100,7 +104,7 @@ export function skillsCommand(program) {
         console.log(chalk.dim(`Opening ${skillPath} in ${editor}...`));
 
         try {
-          execSync(`${editor} "${skillPath}"`, { stdio: 'inherit' });
+          execFileSync(editor, [skillPath], { stdio: 'inherit' });
         } catch (err) {
           console.error(chalk.red(`Editor exited with error: ${err.message}`));
           process.exit(1);
@@ -242,7 +246,9 @@ export function skillsCommand(program) {
   cmd
     .command('delete <name>')
     .description('Delete a skill locally and optionally unpublish from Provision')
-    .action(async (name) => {
+    .action(async (rawName) => {
+      const name = sanitizeSkillName(rawName);
+      if (!name) { console.error(chalk.red('Invalid skill name.')); process.exit(1); }
       const skillDir = join(getSkillsDir(), name);
 
       if (!existsSync(skillDir)) {

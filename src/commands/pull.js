@@ -3,13 +3,18 @@ import ora from 'ora';
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { api } from '../api.js';
-import { getSkillsDir } from '../config.js';
+import { getSkillsDir, sanitizeSkillName } from '../config.js';
 
 export function pullCommand(program) {
   program
     .command('pull <name>')
     .description('Download a skill from Provision marketplace')
-    .action(async (name) => {
+    .action(async (rawName) => {
+      const name = sanitizeSkillName(rawName);
+      if (!name) {
+        console.error(chalk.red('Invalid skill name. Use lowercase letters, numbers, and hyphens only.'));
+        process.exit(1);
+      }
       const spinner = ora(`Pulling ${name}...`).start();
 
       try {

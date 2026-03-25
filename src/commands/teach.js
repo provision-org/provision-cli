@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, basename } from 'path';
 import { api } from '../api.js';
-import { getSkillsDir, getToken, getApiUrl } from '../config.js';
+import { getSkillsDir, getToken, getApiUrl, sanitizeSkillName } from '../config.js';
 import {
   getOfflineKey,
   canRunOffline,
@@ -20,11 +20,18 @@ export function teachCommand(program) {
     .option('-d, --describe <description>', 'Describe the workflow in text')
     .option('-v, --video <path>', 'Learn from a screen recording')
     .option('-n, --name <name>', 'Skill name')
+    .option('--offline', 'Force local processing with your own API key (never send data to Provision)')
     .action(async (options) => {
       // Determine mode: online (Provision API) or offline (Gemini key)
       const token = getToken();
       const geminiKey = getOfflineKey();
-      const isOffline = !token && canRunOffline();
+      const isOffline = options.offline ? canRunOffline() : (!token && canRunOffline());
+
+      if (options.offline && !geminiKey) {
+        console.error(chalk.red('Offline mode requires GEMINI_API_KEY environment variable.'));
+        console.log(chalk.dim('  GEMINI_API_KEY=your-key npx @provision-ai/cli teach --offline -v demo.mp4'));
+        process.exit(1);
+      }
 
       if (!token && !geminiKey) {
         console.log(chalk.yellow('Not logged in and no API key found.\n'));
@@ -152,7 +159,11 @@ export function teachCommand(program) {
       }
 
       // Get skill name
-      let skillName = options.name;
+      let skillName = options.name ? sanitizeSkillName(options.name) : null;
+      if (options.name && !skillName) {
+        console.error(chalk.red('Invalid skill name. Use lowercase letters, numbers, and hyphens only.'));
+        process.exit(1);
+      }
       if (!skillName) {
         const { name } = await inquirer.prompt([
           {
@@ -160,7 +171,7 @@ export function teachCommand(program) {
             name: 'name',
             message: 'Skill name:',
             default: result.suggested_name || 'my-skill',
-            validate: (v) => /^[a-z0-9-]+$/.test(v) || 'Use lowercase letters, numbers, and hyphens only',
+            validate: (v) => /^[a-z0-9][a-z0-9_-]*$/.test(v) || 'Use lowercase letters, numbers, and hyphens only',
           },
         ]);
         skillName = name;

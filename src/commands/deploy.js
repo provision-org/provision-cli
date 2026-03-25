@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import { api } from '../api.js';
-import { getToken } from '../config.js';
+import { getToken, sanitizeSkillName } from '../config.js';
 import { readLocalSkill, getServerSkill, publishSkillByName } from '../publishHelper.js';
 
 export function deployCommand(program) {
@@ -11,7 +11,13 @@ export function deployCommand(program) {
     .description('Deploy a skill to a running Provision agent')
     .option('-a, --agent <id>', 'Agent ID to deploy to')
     .option('-f, --force', 'Auto-publish if local version is newer (skip prompt)')
-    .action(async (skill, options) => {
+    .action(async (rawSkill, options) => {
+      const skill = sanitizeSkillName(rawSkill);
+      if (!skill) {
+        console.error(chalk.red('Invalid skill name. Use lowercase letters, numbers, and hyphens only.'));
+        process.exit(1);
+      }
+
       // 1. Require login
       if (!getToken()) {
         console.error(chalk.red('Not logged in. Run `npx @provision-ai/cli login` first.'));
