@@ -214,9 +214,12 @@ export function teachCommand(program) {
         { name: 'Codex (.codex/skills/)', value: 'codex' },
       ];
 
-      // Only show "Publish to Provision" if logged in
+      // Only show Provision options if logged in
       if (token) {
-        installChoices.unshift({ name: 'Publish to Provision AI', value: 'publish' });
+        installChoices.unshift(
+          { name: 'Publish to Provision AI', value: 'publish' },
+          { name: 'Deploy to a Provision Agent', value: 'deploy-agent' },
+        );
       }
 
       const { targets } = await inquirer.prompt([
@@ -269,6 +272,47 @@ export function teachCommand(program) {
           console.log(chalk.dim(`  View at: https://provision.ai/skills/${skillName}`));
         } catch (err) {
           console.error(chalk.red(`Failed to publish: ${err.message}`));
+        }
+      }
+
+      if (targets.includes('deploy-agent')) {
+        // Auto-publish if not already published in this run
+        if (!targets.includes('publish')) {
+          try {
+            const { publishSkillByName } = await import('../publishHelper.js');
+            await publishSkillByName(skillName, { changelog: 'Auto-published for agent deploy', silent: false });
+          } catch (err) {
+            console.error(chalk.red(`Failed to publish: ${err.message}`));
+          }
+        }
+
+        // Pick an agent and deploy
+        try {
+          const agents = await api.listAgents();
+          if (agents.length === 0) {
+            console.log(chalk.yellow('No agents found. Create one at provision.ai to deploy skills.'));
+          } else {
+            const { agentId } = await inquirer.prompt([{
+              type: 'list',
+              name: 'agentId',
+              message: 'Deploy to which agent?',
+              choices: agents.map(a => ({
+                name: `${a.name} (${a.status})`,
+                value: a.id,
+              })),
+            }]);
+
+            const deploySpinner = ora(`Deploying ${chalk.bold(skillName)} to agent...`).start();
+            try {
+              await api.deploySkill(agentId, skillName);
+              deploySpinner.succeed(`${chalk.bold(skillName)} deployed to agent`);
+              console.log(chalk.dim('  The agent will pick up the skill on its next session.'));
+            } catch (err) {
+              deploySpinner.fail(`Failed to deploy: ${err.message}`);
+            }
+          }
+        } catch (err) {
+          console.error(chalk.red(`Failed to list agents: ${err.message}`));
         }
       }
 
